@@ -1,34 +1,23 @@
 extends Reference
 
 class_name VMD
-
-class Interp:
-	var X: VMDUtils.BezierInterpolator
-	var Y: VMDUtils.BezierInterpolator
-	var Z: VMDUtils.BezierInterpolator
-	var rotation: VMDUtils.BezierInterpolator
-	func _init(_X: VMDUtils.BezierInterpolator, _Y: VMDUtils.BezierInterpolator, _Z: VMDUtils.BezierInterpolator, _rotation: VMDUtils.BezierInterpolator):
-		X = _X
-		Y = _Y
-		Z = _Z
-		rotation = _rotation
 		
 class BoneKeyframe:
 	var name: String
 	var frame_number: int
 	var position: Vector3
 	var rotation: Quat
-	var interp: VMD.Interp
+	var interp: Array
 	
 	func read(file: File):
 		name = VMDUtils.read_string(file, 15)
 		frame_number = VMDUtils.unsigned32_to_signed(file.get_32())
 		position = VMDUtils.read_vector3(file)
 		rotation = VMDUtils.read_quat(file)
-		interp = Interp.new(
+		interp = [
 			VMDUtils.read_bezier(file, 4), VMDUtils.read_bezier(file, 4),
 			VMDUtils.read_bezier(file, 4), VMDUtils.read_bezier(file, 4)
-		)
+		]
 		
 class FaceKeyframe:
 	var name: String
@@ -140,7 +129,6 @@ func read(file: File) -> int:
 		camera_keyframes.append(ck)
 		
 	if file.get_position() == file.get_len():
-		breakpoint
 		return OK
 		
 	var light_frame_count = VMDUtils.unsigned32_to_signed(file.get_32())
@@ -150,7 +138,6 @@ func read(file: File) -> int:
 		light_keyframes.append(lk)
 		
 	if file.get_position() == file.get_len():
-		breakpoint
 		return OK
 		
 	var self_shadow_frame_count = VMDUtils.unsigned32_to_signed(file.get_32())
@@ -165,5 +152,4 @@ func read(file: File) -> int:
 		ikk.read(file)
 		ik_keyframes.append(ikk)
 		
-	breakpoint
 	return OK
