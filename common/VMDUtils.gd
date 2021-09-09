@@ -113,3 +113,24 @@ static func read_bezier(file: File, stride: int) -> BezierInterpolator:
 	binterp.X1 = file.get_buffer(stride)[0]/127.0
 	binterp.Y1 = file.get_buffer(stride)[0]/127.0
 	return binterp
+
+static func binary_split(list: Array, pred: FuncRef) -> Dictionary:
+	var i = 0
+	var j = list.size()
+	while i < j:
+		var k = (i+j)/2
+		if pred.call_func(list[k]):
+			j = k
+		else:
+			i = k + 1
+	var result = {}
+	
+	if i < list.size():
+		result["first_true"] = list[i]
+	if i > 0:
+		result["last_false"] = list[i-1]
+	return result
+		
+		
+		
+		
