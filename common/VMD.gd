@@ -3,21 +3,33 @@ extends Reference
 class_name VMD
 		
 class BoneKeyframe:
+	
+	class BoneInterp:
+		var X: VMDUtils.BezierInterpolator
+		var Y: VMDUtils.BezierInterpolator
+		var Z: VMDUtils.BezierInterpolator
+		var rotation: VMDUtils.BezierInterpolator
+		func _init(_X: VMDUtils.BezierInterpolator, _Y: VMDUtils.BezierInterpolator, _Z: VMDUtils.BezierInterpolator, _rotation: VMDUtils.BezierInterpolator):
+			X = _X
+			Y = _Y
+			Z = _Z
+			rotation = _rotation
+	
 	var name: String
 	var frame_number: int
 	var position: Vector3
 	var rotation: Quat
-	var interp: Array
+	var interp: BoneInterp
 	
 	func read(file: File):
 		name = VMDUtils.read_string(file, 15)
 		frame_number = VMDUtils.unsigned32_to_signed(file.get_32())
 		position = VMDUtils.read_vector3(file)
 		rotation = VMDUtils.read_quat(file)
-		interp = [
+		interp = BoneInterp.new(
 			VMDUtils.read_bezier(file, 4), VMDUtils.read_bezier(file, 4),
 			VMDUtils.read_bezier(file, 4), VMDUtils.read_bezier(file, 4)
-		]
+		)
 		
 class FaceKeyframe:
 	var name: String
