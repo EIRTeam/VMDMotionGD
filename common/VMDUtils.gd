@@ -131,6 +131,10 @@ static func binary_split(list: Array, pred: FuncRef) -> Dictionary:
 		result["last_false"] = list[i-1]
 	return result
 		
-		
-		
-		
+static func get_bone_global_rest(skel: Skeleton, bone_i: int) -> Transform:
+	var final_transform := skel.get_bone_rest(bone_i)
+	var bone_parent = skel.get_bone_parent(bone_i)
+	while bone_parent != -1:
+		final_transform = skel.get_bone_rest(bone_parent).xform_inv(final_transform)
+		bone_parent = skel.get_bone_parent(bone_parent)
+	return final_transform
