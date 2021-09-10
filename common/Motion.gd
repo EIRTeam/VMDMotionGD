@@ -24,11 +24,16 @@ class BoneCurve:
 		
 		var next_frame = out.get("first_true", null) as VMD.BoneKeyframe
 		
+		if keyframes.size() > 0:
+			print("DAB!")
+		
 		if "last_false" in out:
 			var last_frame := out.last_false as VMD.BoneKeyframe
 			last_frame_num = last_frame.frame_number
 			last_position = last_frame.position
 			last_rotation = last_frame.rotation
+			print("LAST FALSE")
+			print("LAST FALSE")
 
 		if next_frame == null:
 			result.position = last_position
@@ -77,6 +82,8 @@ class FaceCurve:
 		var last_frame_num := 0
 		var last_weight := 0.0
 		
+
+		
 		if "last_false" in out:
 			var last_frame := out.last_false as VMD.FaceKeyframe
 			last_frame_num = last_frame.frame_number
@@ -102,13 +109,13 @@ class IKCurve:
 		var out := VMDUtils.binary_split(keyframes, funcref(self, "binary_split_pred"))
 		
 		if "last_false" in out:
-			var keyframe = out.last_fale as VMD.IKKeyframe
+			var keyframe = out.last_false as VMD.IKKeyframe
 			return keyframe.ik_enable
 		return {}
 		
 var bones := {}
 var faces := {}
-var ik = IKCurve.new()
+var ik := IKCurve.new()
 
 func _init(vmds: Array):
 	for i in range(vmds.size()):

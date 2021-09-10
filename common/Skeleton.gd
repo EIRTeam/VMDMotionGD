@@ -1,9 +1,11 @@
+class_name VMDSkeleton
+
 class VMDSkelBone:
 	var name: int
 	var node: Spatial
 	var local_position_0: Vector3
 	
-	var target: Transform
+	var target = null
 	var target_position: Vector3
 	var target_rotation: Quat
 	
@@ -23,21 +25,21 @@ class VMDSkelBone:
 		node.name = StandardBones.get_bone_name(name)
 		parent_node.add_child(node)
 		
-		if source as Transform:
+		if source is Transform:
 			node.global_transform.origin = source.origin
 		local_position_0 = node.transform.origin
 		
-		if _target as Transform:
+		if _target is Transform:
 			target = _target
 			target_position = node.global_transform.xform_inv(target.origin)
-			target_rotation = target.basis.get_rotation_quat().inverse() * target.basis.get_rotation_quat()
+			target_rotation = node.global_transform.basis.get_rotation_quat().inverse() * target.basis.get_rotation_quat()
 	func apply_target():
-		if target:
+		if target != null:
 			target.origin = node.global_transform.xform(target_position)
 			target.basis = Basis(node.global_transform.basis.get_rotation_quat() * target_rotation)
 			update_pose()
 	func update_pose():
-			skeleton.set_bone_global_pose_override(target_bone_skel_i, target, 1.0, true)
+		skeleton.set_bone_global_pose_override(target_bone_skel_i, target, 1.0, true)
 		
 var root: Spatial
 var bones = []
@@ -45,22 +47,33 @@ var bones = []
 class VMDSkelBonePlaceHolder:
 	pass
 	
-func _init(skel: Skeleton, source_overrides := {}):
+func _init(animator: VMDAnimatorBase, source_overrides := {}):
 	root = Spatial.new()
+	var skel := animator.skeleton
 	skel.add_child(root)
 	# TODO: This should be different for godot and unity, afaik
-	root.transform.basis = root.transform.basis.rotated(Vector3.UP, deg2rad(180.0))
+	root.global_transform.basis = root.transform.basis.rotated(Vector3.UP, deg2rad(180.0))
 	
 	for i in range(StandardBones.bone_names.size()):
 		bones.append(VMDSkelBonePlaceHolder.new())
 	
+	
 	for i in range(StandardBones.bones.size()):
 		var template = StandardBones.bones[i] as StandardBones.StandardBone
 		var parent_node = root if not template.parent else bones[template.parent].node
-		var source_bone_skel_i = skel.find_bone(template.source)
-		var target_bone_skel_i = skel.find_bone(template.target)
-		var position_transform = source_overrides[template.name] if template.parent in source_overrides else VMDUtils.get_bone_global_rest(skel, source_bone_skel_i)
-		var target = null if template.target == null else template.target
+		var source_bone_skel_i = -1
+		var target_bone_skel_i = -1
+	
+		var source_transform = null
+		
+		if template.source:
+			source_bone_skel_i = animator.find_humanoid_bone(template.source)
+			source_transform = VMDUtils.get_bone_global_rest(skel, source_bone_skel_i)
+		if template.target:
+			target_bone_skel_i = animator.find_humanoid_bone(template.target)
+		
+		var position_transform = source_overrides[template.name] if template.parent in source_overrides else source_transform
+		var target = null if template.target == null else VMDUtils.get_bone_global_rest(skel, target_bone_skel_i)
 		bones[template.name] = VMDSkelBone.new(template.name, parent_node, position_transform, target, skel, target_bone_skel_i)
 		
 	# TODO: juice this
@@ -68,7 +81,7 @@ func _init(skel: Skeleton, source_overrides := {}):
 	for i in range(bones.size()):
 		var bone = bones[i]
 		if bone is VMDSkelBonePlaceHolder:
-			bones[i] = VMDSkelBone.new(i, root, null, null, skel, skel.find_bone(StandardBones.bones[i].target))
+			bones[i] = VMDSkelBone.new(i, root, null, null, skel, animator.find_humanoid_bone(StandardBones.bones[i].target))
 
 func apply_targets():
 	for i in range(bones.size()):
@@ -84,9 +97,9 @@ func apply_constraints(apply_ik = true, apply_ikq = false):
 			var source = (bones[constraint.source] as VMDSkelBone).node
 			
 			if constraint.minus:
-				var src_parent_rotation := (source.node.get_parent() as Spatial).global_transform.basis.get_rotation_quat()
+				var src_parent_rotation := (source.get_parent() as Spatial).global_transform.basis.get_rotation_quat()
 				var inv_source_rotation := source.global_transform.basis.get_rotation_quat().inverse() as Quat
-				target.global_transform.basis = Basis(src_parent_rotation * inv_source_rotation * target.global_transform * target.global_transform.basis.get_rotation_quat())
+				target.global_transform.basis = Basis(src_parent_rotation * inv_source_rotation * target.global_transform.basis.get_rotation_quat())
 			else:
 				target.transform.basis = source.transform.basis * target.transform.basis
 		elif constraint is StandardBones.LimbIK:
@@ -107,8 +120,8 @@ func apply_constraints(apply_ik = true, apply_ikq = false):
 		elif constraint is StandardBones.LookAt:
 			var foot = bones[constraint.target_0].node as Spatial
 			var toe = bones[constraint.target_1].node as Spatial
-			var foot_ik = null if constraint.source_0 else bones[constraint.source_0]
-			var toe_ik = null if constraint.source_1 else bones[constraint.source_1]
+			var foot_ik = null if not constraint.source_0 else bones[constraint.source_0]
+			var toe_ik = null if not constraint.source_1 else bones[constraint.source_1]
 			
 			if foot_ik != null and !foot_ik.ik_enabled:
 				continue

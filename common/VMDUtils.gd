@@ -133,8 +133,11 @@ static func binary_split(list: Array, pred: FuncRef) -> Dictionary:
 		
 static func get_bone_global_rest(skel: Skeleton, bone_i: int) -> Transform:
 	var final_transform := skel.get_bone_rest(bone_i)
+	if bone_i == -1:
+		breakpoint
 	var bone_parent = skel.get_bone_parent(bone_i)
 	while bone_parent != -1:
-		final_transform = skel.get_bone_rest(bone_parent).xform_inv(final_transform)
+		final_transform = skel.get_bone_rest(bone_parent).inverse() * final_transform
 		bone_parent = skel.get_bone_parent(bone_parent)
 	return final_transform
+
