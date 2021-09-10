@@ -137,7 +137,7 @@ static func get_bone_global_rest(skel: Skeleton, bone_i: int) -> Transform:
 		breakpoint
 	var bone_parent = skel.get_bone_parent(bone_i)
 	while bone_parent != -1:
-		final_transform = skel.get_bone_rest(bone_parent).inverse() * final_transform
+		final_transform = skel.get_bone_rest(bone_parent) * final_transform
 		bone_parent = skel.get_bone_parent(bone_parent)
 	return final_transform
 

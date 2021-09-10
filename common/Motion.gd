@@ -24,16 +24,11 @@ class BoneCurve:
 		
 		var next_frame = out.get("first_true", null) as VMD.BoneKeyframe
 		
-		if keyframes.size() > 0:
-			print("DAB!")
-		
 		if "last_false" in out:
 			var last_frame := out.last_false as VMD.BoneKeyframe
 			last_frame_num = last_frame.frame_number
 			last_position = last_frame.position
 			last_rotation = last_frame.rotation
-			print("LAST FALSE")
-			print("LAST FALSE")
 
 		if next_frame == null:
 			result.position = last_position
