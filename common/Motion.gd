@@ -129,7 +129,7 @@ func add_clip(vmd: VMD):
 		if not keyframe.name in faces:
 			faces[keyframe.name] = FaceCurve.new()
 		(faces[keyframe.name] as FaceCurve).keyframes.append(keyframe)
-	for i in vmd.ik_keyframes:
+	for i in range(vmd.ik_keyframes.size()):
 		var keyframe = vmd.ik_keyframes[i] as VMD.IKKeyframe
 		ik.keyframes.append(keyframe)
 

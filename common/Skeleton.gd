@@ -52,8 +52,8 @@ func _init(animator: VMDAnimatorBase, source_overrides := {}):
 	var skel := animator.skeleton
 	skel.add_child(root)
 	# TODO: This should be different for godot and unity, afaik
-	root.global_transform.basis = root.transform.basis.rotated(Vector3.UP, deg2rad(180.0))
-	
+	#root.global_transform.basis = (Basis.FLIP_X.inverse() * Basis(Vector3(0.0, deg2rad(0.0), 0.0)) * Basis.FLIP_X)
+#	root.rotate_y(deg2rad(180.0))
 	for i in range(StandardBones.bone_names.size()):
 		bones.append(VMDSkelBonePlaceHolder.new())
 	
@@ -138,8 +138,14 @@ static func calc_bend(v0: Vector3, v1: Vector3, dist: float) -> float:
 		return max(0.0, acos(clamp(dot/u1.length(), -1, 1)) - atan2(u1.y, u1.x));
 
 func quat_from_to_rotation(from: Vector3, to: Vector3):
-	var axis = from.cross(to).normalized()
-	var angle = from.angle_to(to)
-	var quat = Quat(axis, angle)
+	var quat = Quat()
+	var a := from.cross(to)
+	quat.x = a.x
+	quat.y = a.y
+	quat.z = a.z
+
+	quat.w = sqrt(pow(from.length(), 2.0) * pow(to.length(), 2.0)) + from.dot(to);
+
+
 	return quat
 			

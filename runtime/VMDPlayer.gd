@@ -19,7 +19,7 @@ var anim_scale := 0.08
 var scale_overrides = PoolRealArray()
 var manual_update_time = false
 var mirror = false
-var locomotion_scale = Vector3.ONE
+var locomotion_scale = Vector3.ONE * 0.5
 var enable_ik = true
 var enable_ikq = true
 
@@ -151,8 +151,8 @@ func apply_bone_frame(frame: float):
 		
 		if mirror:
 			pos.x *= -1
-			pos.y *= -1
-			pos.z *= -1
+			rot.y *= -1
+			rot.z *= -1
 		var scal = scale_overrides[bone.name]
 		if scal == 0:
 			scal = anim_scale
@@ -184,3 +184,4 @@ func apply_ik_frame(frame: float):
 				bone_i = StandardBones.get_bone_i(StandardBones.MIRROR_BONE_NAMES[i])
 			if vmd_skeleton.bones[bone_i].ik_enabled != enable:
 				print("%s, %s", name, str(enable))
+			vmd_skeleton.bones[bone_i].ik_enabled = enable
