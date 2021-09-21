@@ -6,7 +6,7 @@ This is a Godot Engine 3.x port of [lox9973's tool](https://gitlab.com/lox9973/V
 
 # Usage
 
-This is designed to be used with [godot-vrm](https://github.com/V-Sekai/godot-vrm).
+VMDMotionGD is designed to be used with [godot-vrm](https://github.com/V-Sekai/godot-vrm).
 
 A specific `VMDAnimator` base will need to be implemented for the humanoid bone mapping and other things, an example VRM implementation is provided in `runtime/VRMAnimator.gd`, this will probably be split off in the future.
 
