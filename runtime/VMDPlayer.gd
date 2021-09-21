@@ -3,25 +3,26 @@ extends Spatial
 class_name VMDPlayer
 
 const FPS := 30.0
-const TEST_VMD_PATH = "res://wim.vmd"
 
+export(String, FILE, "*.vmd") var starting_file_path: String
 export var animator_path: NodePath
-var animator: VMDAnimatorBase
-var time = 0.0
+onready var animator: VMDAnimatorBase = get_node(animator_path)
+export var anim_scale := 0.08
+export var mirror = false
+export var locomotion_scale = Vector3.ONE
+export var manual_update_time = false
+export var enable_ik = true
+export var enable_ikq = false
+
 var start_time: int
-var motion: Motion
-var first_frame_number: int
-var bone_curves = []
-var apply_ikq = false
-var vmd_skeleton: VMDSkeleton
-var morph: Morph
-var anim_scale := 0.08
 var scale_overrides = PoolRealArray()
-var manual_update_time = false
-var mirror = false
-var locomotion_scale = Vector3.ONE * 0.5
-var enable_ik = true
-var enable_ikq = true
+var time = 0.0
+var motion: Motion
+var bone_curves = []
+var vmd_skeleton: VMDSkeleton
+var apply_ikq = false
+var morph: Morph
+var first_frame_number: int
 
 func vmd_from_file(path: String):
 	var f = File.new()
@@ -30,10 +31,10 @@ func vmd_from_file(path: String):
 	vmd.read(f)
 	return vmd
 
-func _ready():
+func load_motion(motion_path: String):
 	start_time = OS.get_ticks_msec()
-	motion = Motion.new([vmd_from_file(TEST_VMD_PATH)])
-	animator = get_node(animator_path)
+	
+	motion = Motion.new([vmd_from_file(motion_path)])
 	
 	for i in range(motion.bones.size()):
 		var key = motion.bones.keys()[i]
@@ -109,6 +110,7 @@ func _ready():
 	
 	if not vmd_skeleton:
 		print("scale suggestion: %.2f" % [0.07*animator.get_human_scale()])
+		anim_scale = 0.07*animator.get_human_scale()
 		# TODO: this
 		#var source_overrides = {}
 		vmd_skeleton = VMDSkeleton.new(animator)
@@ -118,6 +120,9 @@ func _ready():
 		vmd_skeleton.bones[bone_i].ik_enabled = bone_curves[bone_i].keyframes.size() > 1
 	scale_overrides.resize(vmd_skeleton.bones.size())
 	
+	for i in scale_overrides.size():
+		scale_overrides.set(i, 0.0)
+	
 	for bone_i in [StandardBones.get_bone_i("左つま先ＩＫ"), StandardBones.get_bone_i("右つま先ＩＫ")]:
 		var curve_local_pos_0 := -(bone_curves[bone_i] as Motion.BoneCurve).estimate_rotation_center_from_position()
 		var bone_local_pos_0 := (vmd_skeleton.bones[bone_i] as VMDSkeleton.VMDSkelBone).local_position_0
@@ -125,12 +130,20 @@ func _ready():
 		if curve_local_pos_0 != Vector3.ZERO:
 			scale_overrides.set(bone_i, bone_local_pos_0.length() / curve_local_pos_0.length())
 			print("override scale %s (%.4f)" % [StandardBones.get_bone_name(bone_i), scale_overrides[bone_i]])
+	
+	if motion:
+		set_process(true)
+
+func _ready():
+	animator = get_node(animator_path)
+	set_process(false)
+	if not starting_file_path.empty():
+		load_motion(starting_file_path)
 
 func _process(delta):
 	if not manual_update_time:
 		time = (OS.get_ticks_msec() - start_time) / 1000.0
 	var frame = time * FPS
-	print(frame)
 	update_frame(frame)
 func update_frame(frame: float):
 	apply_ik_frame(frame)
@@ -142,7 +155,6 @@ func apply_bone_frame(frame: float):
 	frame = max(frame, 0.0)
 	for i in range(vmd_skeleton.bones.size()):
 		var bone = vmd_skeleton.bones[i] as VMDSkeleton.VMDSkelBone
-		var index = StandardBones.mirror_bone_names[bone.name] if mirror else bone.name
 		var curve = bone_curves[i] as Motion.BoneCurve
 		var sample_result := curve.sample(frame) as Motion.BoneCurve.BoneSampleResult
 		

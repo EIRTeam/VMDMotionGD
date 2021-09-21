@@ -51,9 +51,7 @@ func _init(animator: VMDAnimatorBase, source_overrides := {}):
 	root = Spatial.new()
 	var skel := animator.skeleton
 	skel.add_child(root)
-	# TODO: This should be different for godot and unity, afaik
-	#root.global_transform.basis = (Basis.FLIP_X.inverse() * Basis(Vector3(0.0, deg2rad(0.0), 0.0)) * Basis.FLIP_X)
-#	root.rotate_y(deg2rad(180.0))
+	root.global_transform.basis.x = Vector3.LEFT
 	for i in range(StandardBones.bone_names.size()):
 		bones.append(VMDSkelBonePlaceHolder.new())
 	
@@ -97,9 +95,7 @@ func apply_constraints(apply_ik = true, apply_ikq = false):
 			var source = (bones[constraint.source] as VMDSkelBone).node
 			
 			if constraint.minus:
-				var src_parent_rotation := (source.get_parent() as Spatial).global_transform.basis.get_rotation_quat()
-				var inv_source_rotation := source.global_transform.basis.get_rotation_quat().inverse() as Quat
-				target.global_transform.basis = Basis(src_parent_rotation * inv_source_rotation * target.global_transform.basis.get_rotation_quat())
+				target.global_transform.basis = source.get_parent().global_transform.basis * source.global_transform.basis.inverse() * target.global_transform.basis
 			else:
 				target.transform.basis = source.transform.basis * target.transform.basis
 		elif constraint is StandardBones.LimbIK:
@@ -136,16 +132,29 @@ static func calc_bend(v0: Vector3, v1: Vector3, dist: float) -> float:
 		var dot = (dist*dist - v0.length_squared() - v1.length_squared())/2 - v0.x*v1.x;
 		u1 = Vector2(u0.x*u1.x + u0.y*u1.y, u0.x*u1.y - u1.x*u0.y);
 		return max(0.0, acos(clamp(dot/u1.length(), -1, 1)) - atan2(u1.y, u1.x));
-
-func quat_from_to_rotation(from: Vector3, to: Vector3):
-	var quat = Quat()
-	var a := from.cross(to)
-	quat.x = a.x
-	quat.y = a.y
-	quat.z = a.z
-
-	quat.w = sqrt(pow(from.length(), 2.0) * pow(to.length(), 2.0)) + from.dot(to);
-
-
-	return quat
 			
+# Ported from Ogre3D
+func quat_from_to_rotation(from: Vector3, to: Vector3) -> Quat:
+	from = from.normalized()
+	to = to.normalized()
+	var q = Quat()
+	var d = from.dot(to)
+	if d >= 1.0:
+		return Quat.IDENTITY
+	elif d < (1.0e-6 - 1.0):
+		var axis = Vector3.RIGHT.cross(from)
+		if axis.length_squared() < (1e-06 * 1e-06):
+			axis = Vector3.UP.cross(from)
+		q.set_axis_angle(axis.normalized(), PI)
+	else:
+		q = Quat.IDENTITY
+		var s := sqrt((1.0+d) * 2.0)
+		var invs := 1.0 / s
+		var c := from.cross(to)
+
+		q.x = c.x * invs
+		q.y = c.y * invs
+		q.z = c.z * invs
+		q.w = s * 0.5
+	return q.normalized()
+
