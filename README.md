@@ -2,7 +2,7 @@
 
 VMDMotionGD is a tool to play VMD (Vocaloid Motion Data) animation on Unity humanoid-style characters.
 
-This is a Godot Engine 3.x port of [lox9973's tool](https://gitlab.com/lox9973/VMDMotion/-/tree/master)'s tool.
+This is a Godot Engine 3.x port of [lox9973's tool](https://gitlab.com/lox9973/VMDMotion/-/tree/master).
 
 # Usage
 
