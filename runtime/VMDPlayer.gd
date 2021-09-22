@@ -33,8 +33,6 @@ func vmd_from_file(path: String):
 	return vmd
 
 func load_motion(motion_path: String):
-	start_time = OS.get_ticks_msec()
-	
 	motion = Motion.new([vmd_from_file(motion_path)])
 	
 	for i in range(motion.bones.size()):
@@ -120,6 +118,7 @@ func load_motion(motion_path: String):
 	
 	if motion:
 		set_process(true)
+		start_time = OS.get_ticks_msec()
 
 func _ready():
 	animator = get_node(animator_path)
