@@ -95,15 +95,6 @@ func load_motion(motion_path: String):
 			ik_qframes[bone_i] = ik_count
 	apply_ikq = ik_qframes.size() > 0
 	
-	var ik_rotation_frames_str = PoolStringArray()
-	ik_rotation_frames_str.resize(ik_qframes.size())
-	for i in ik_qframes.size():
-		if not motion.faces.has(i):
-			continue
-		var curve = motion.faces.values()[i] as Motion.FaceCurve
-		ik_rotation_frames_str.set(i, "%s (%d)" % [StandardBones.get_bone_name(ik_qframes.keys()[i]), ik_qframes.values()[i]])
-	print_debug("ik rotation frames: ", ik_rotation_frames_str.join(", "))
-	
 	if not vmd_skeleton:
 		print("scale suggestion: %.2f" % [0.07*animator.get_human_scale()])
 		anim_scale = 0.07*animator.get_human_scale()
