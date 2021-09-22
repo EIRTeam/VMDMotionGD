@@ -124,12 +124,13 @@ func apply_constraints(apply_ik = true, apply_ikq = false):
 			
 			if foot_ik != null and !foot_ik.ik_enabled:
 				continue
-			continue
 			if foot_ik != null and apply_ikq:
 				foot.global_transform.basis = foot_ik.node.global_transform.basis
 			if toe_ik.ik_enabled:
-				foot.global_transform.basis = Basis(quat_from_to_rotation(toe.transform.origin, foot.node.global_transform.xform_inv(toe_ik.node.global_transform.origin)))
-			
+				var basis : Basis = quat_from_to_rotation(toe.transform.origin, foot.global_transform.xform_inv(toe_ik.node.global_transform.origin))
+				foot.global_transform.basis *= basis
+
+
 static func calc_bend(v0: Vector3, v1: Vector3, dist: float) -> float:
 		var u0 = Vector2(v0.y, v0.z);
 		var u1 = Vector2(v1.y, v1.z);
