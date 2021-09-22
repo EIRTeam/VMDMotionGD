@@ -124,6 +124,7 @@ func apply_constraints(apply_ik = true, apply_ikq = false):
 			
 			if foot_ik != null and !foot_ik.ik_enabled:
 				continue
+			continue
 			if foot_ik != null and apply_ikq:
 				foot.global_transform.basis = foot_ik.node.global_transform.basis
 			if toe_ik.ik_enabled:
