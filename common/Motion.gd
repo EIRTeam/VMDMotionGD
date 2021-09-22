@@ -156,3 +156,14 @@ func process():
 		var curve = faces.values()[i] as FaceCurve
 		curve.keyframes.sort_custom(self, "sort_faces")
 	ik.keyframes.sort_custom(self, "sort_ik")
+
+func get_max_frame() -> int:
+	var max_frame = 0
+	for i in bones.size():
+		var curve = bones.values()[i] as Motion.BoneCurve
+		var max_subframe = 0
+		for ii in curve.keyframes.size():
+			var kf = curve.keyframes[ii] as VMD.BoneKeyframe
+			max_subframe = max(kf.frame_number, max_subframe)
+		max_frame = max(max_subframe, max_frame)
+	return max_frame

@@ -23,6 +23,7 @@ var vmd_skeleton: VMDSkeleton
 var apply_ikq = false
 var morph: Morph
 var first_frame_number: int
+var max_frame: int
 
 func vmd_from_file(path: String):
 	var f = File.new()
@@ -44,6 +45,7 @@ func load_motion(motion_path: String):
 			print("Bone rename %s => %s" % [key, bone_name])
 			motion.bones.erase(key)
 			motion.bones[bone_name] = value
+	bone_curves = []
 	for i in StandardBones.bone_names.size():
 		var bone_name = StandardBones.get_bone_name(i)
 		if bone_name in motion.bones:
@@ -51,15 +53,7 @@ func load_motion(motion_path: String):
 		else:
 			bone_curves.append(Motion.BoneCurve.new())
 	
-	var max_frame = 0
-	
-	for i in motion.bones.size():
-		var curve = motion.bones.values()[i] as Motion.BoneCurve
-		var max_subframe = 0
-		for ii in curve.keyframes.size():
-			var kf = curve.keyframes[ii] as VMD.BoneKeyframe
-			max_subframe = max(kf.frame_number, max_subframe)
-		max_frame = max(max_subframe, max_frame)
+	max_frame = motion.get_max_frame()
 	print_debug("Duration: %.2f s (%d frames)" % [max_frame / FPS, max_frame])
 	var bone_frames_str = PoolStringArray()
 	bone_frames_str.resize(motion.bones.size())
@@ -104,6 +98,8 @@ func load_motion(motion_path: String):
 	var ik_rotation_frames_str = PoolStringArray()
 	ik_rotation_frames_str.resize(ik_qframes.size())
 	for i in ik_qframes.size():
+		if not motion.faces.has(i):
+			continue
 		var curve = motion.faces.values()[i] as Motion.FaceCurve
 		ik_rotation_frames_str.set(i, "%s (%d)" % [StandardBones.get_bone_name(ik_qframes.keys()[i]), ik_qframes.values()[i]])
 	print_debug("ik rotation frames: ", ik_rotation_frames_str.join(", "))
@@ -113,7 +109,7 @@ func load_motion(motion_path: String):
 		anim_scale = 0.07*animator.get_human_scale()
 		# TODO: this
 		#var source_overrides = {}
-		vmd_skeleton = VMDSkeleton.new(animator)
+		vmd_skeleton = VMDSkeleton.new(animator, self)
 		morph = Morph.new()
 	for bone_i in [StandardBones.get_bone_i("左足ＩＫ"), StandardBones.get_bone_i("左つま先ＩＫ"), 
 					StandardBones.get_bone_i("右足ＩＫ"), StandardBones.get_bone_i("右つま先ＩＫ")]:

@@ -47,10 +47,13 @@ var bones = []
 class VMDSkelBonePlaceHolder:
 	pass
 	
-func _init(animator: VMDAnimatorBase, source_overrides := {}):
+func _init(animator: VMDAnimatorBase, root_override = null, source_overrides := {}):
 	root = Spatial.new()
 	var skel := animator.skeleton
-	skel.add_child(root)
+	if not root_override:
+		skel.add_child(root)
+	else:
+		root_override.add_child(root)
 	root.global_transform.basis.x = Vector3.LEFT
 	for i in range(StandardBones.bone_names.size()):
 		bones.append(VMDSkelBonePlaceHolder.new())
@@ -157,4 +160,3 @@ func quat_from_to_rotation(from: Vector3, to: Vector3) -> Quat:
 		q.z = c.z * invs
 		q.w = s * 0.5
 	return q.normalized()
-
