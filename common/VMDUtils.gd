@@ -114,6 +114,15 @@ static func read_bezier(file: File, stride: int) -> BezierInterpolator:
 	binterp.Y1 = file.get_buffer(stride)[0]/127.0
 	return binterp
 
+# Camera frames bezier order is XXYY instead of XYXY
+static func read_bezier_camera(file: File, stride: int) -> BezierInterpolator:
+	var binterp = BezierInterpolator.new()
+	binterp.X0 = file.get_buffer(stride)[0]/127.0
+	binterp.X1 = file.get_buffer(stride)[0]/127.0
+	binterp.Y0 = file.get_buffer(stride)[0]/127.0
+	binterp.Y1 = file.get_buffer(stride)[0]/127.0
+	return binterp
+
 static func binary_split(list: Array, pred: FuncRef) -> Dictionary:
 	var i = 0
 	var j = list.size()

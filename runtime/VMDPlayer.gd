@@ -6,6 +6,7 @@ const FPS := 30.0
 
 export(String, FILE, "*.vmd") var starting_file_path: String
 export var animator_path: NodePath
+onready var camera: Camera
 onready var animator: VMDAnimatorBase = get_node(animator_path)
 export var anim_scale := 0.08
 export var mirror = false
@@ -33,8 +34,11 @@ func vmd_from_file(path: String):
 	vmd.read(f)
 	return vmd
 
-func load_motion(motion_path: String):
-	motion = Motion.new([vmd_from_file(motion_path)])
+func load_motions(motion_paths: Array):
+	var vmds = []
+	for motion_path in motion_paths:
+		vmds.append(vmd_from_file(motion_path))
+	motion = Motion.new(vmds)
 	
 	for i in range(motion.bones.size()):
 		var key = motion.bones.keys()[i]
@@ -120,12 +124,18 @@ func load_motion(motion_path: String):
 	if motion:
 		set_process(true)
 		start_time = OS.get_ticks_msec()
-
+		if camera:
+			camera.queue_free()
+		if motion.camera.keyframes.size() > 0:
+			camera = Camera.new()
+			animator.add_child(camera)
+			camera.make_current()
+		
 func _ready():
 	animator = get_node(animator_path)
 	set_process(false)
 	if not starting_file_path.empty():
-		load_motion(starting_file_path)
+		load_motions([starting_file_path])
 
 func _process(delta):
 	if not manual_update_time:
@@ -140,6 +150,8 @@ func update_frame(frame: float):
 	vmd_skeleton.apply_constraints(enable_ik, enable_ik and enable_ikq)
 	vmd_skeleton.apply_targets()
 	morph.apply_targets()
+	apply_camera_frame(frame)
+
 func apply_face_frame(frame: float):
 	frame = max(frame, 0.0)
 
@@ -148,6 +160,20 @@ func apply_face_frame(frame: float):
 		if key in morph.shapes:
 			var shape = morph.shapes[key]
 			shape.weight = value.sample(frame)
+
+func apply_camera_frame(frame: float):
+	frame = max(frame, 0.0)
+	var camera_sample = motion.camera.sample(frame) as Motion.CameraCurve.CameraSampleResult
+	var target_pos = camera_sample.position * 0.07
+	var quat = Quat.IDENTITY
+	var rot = camera_sample.rotation
+	quat.set_euler(rot)
+	var camera_pos = target_pos
+	target_pos.z *= -1
+	camera.global_transform.basis = Basis(quat)
+	camera.global_transform.origin = target_pos + (quat * Vector3.FORWARD) * camera_sample.distance * 0.08
+
+	camera.fov = camera_sample.angle
 
 func apply_bone_frame(frame: float):
 	frame = max(frame, 0.0)

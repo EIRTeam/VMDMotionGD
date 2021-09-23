@@ -42,26 +42,34 @@ class FaceKeyframe:
 		weight = file.get_float()
 		
 class CameraKeyframe:
+	class CameraInterp:
+		var X: VMDUtils.BezierInterpolator
+		var Y: VMDUtils.BezierInterpolator
+		var Z: VMDUtils.BezierInterpolator
+		var R: VMDUtils.BezierInterpolator
+		var dist: VMDUtils.BezierInterpolator
+		var angle: VMDUtils.BezierInterpolator
 	var frame_number: int
 	var distance: float
 	var position: Vector3
-	var rotation: Quat
-	var interp = []
+	var rotation: Vector3
+	var interp = CameraInterp.new()
 	var angle: float
 	var perspective: bool
 	
 	func read(file: File):
 		frame_number = VMDUtils.unsigned32_to_signed(file.get_32())
-		distance = VMDUtils.unsigned32_to_signed(file.get_32())
+		distance = file.get_float()
 		position = VMDUtils.read_vector3(file)
-		rotation = VMDUtils.read_quat(file)
-		interp = [
-			VMDUtils.read_bezier(file, 1), VMDUtils.read_bezier(file, 1), VMDUtils.read_bezier(file, 1),
-			VMDUtils.read_bezier(file, 1), VMDUtils.read_bezier(file, 1), VMDUtils.read_bezier(file, 1),
-			VMDUtils.read_bezier(file, 1), VMDUtils.read_bezier(file, 1), VMDUtils.read_bezier(file, 1)
-		]
-		angle = file.get_float()
-		perspective = file.get_buffer(3)[0] != 0
+		rotation = VMDUtils.read_vector3(file)
+		interp.X = VMDUtils.read_bezier_camera(file, 1)
+		interp.Y = VMDUtils.read_bezier_camera(file, 1)
+		interp.Z = VMDUtils.read_bezier_camera(file, 1)
+		interp.R = VMDUtils.read_bezier_camera(file, 1)
+		interp.dist = VMDUtils.read_bezier_camera(file, 1)
+		interp.angle = VMDUtils.read_bezier_camera(file, 1)
+		angle = VMDUtils.unsigned32_to_signed(file.get_32())
+		perspective = file.get_buffer(1)[0] != 0
 	
 class LightKeyframe:
 	var frame_number: int

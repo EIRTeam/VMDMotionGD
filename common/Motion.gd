@@ -77,8 +77,6 @@ class FaceCurve:
 		var last_frame_num := 0
 		var last_weight := 0.0
 		
-
-		
 		if "last_false" in out:
 			var last_frame := out.last_false as VMD.FaceKeyframe
 			last_frame_num = last_frame.frame_number
@@ -90,13 +88,67 @@ class FaceCurve:
 			return last_weight
 		var w = inverse_lerp(last_frame_num, next_frame.frame_number, frame_number)
 		return lerp(last_weight, next_frame.weight, w) 
-			
-		return inverse_lerp(last_frame_num, next_frame.frame_number, frame_number)
 		
+class CameraCurve:
+	var keyframes := []
+	
+	class CameraSampleResult:
+		var distance: float
+		var position: Vector3
+		var rotation: Vector3
+		var angle: float
+		var perspective: bool = true
+	
+	var _bin_split_frame_number: float
+		
+	func binary_split_pred(f: VMD.CameraKeyframe):
+		return f.frame_number-1 >= _bin_split_frame_number
+		
+	func sample(frame_number: float):
+		_bin_split_frame_number = frame_number
+		var result := CameraSampleResult.new()
+
+		var out := VMDUtils.binary_split(keyframes, funcref(self, "binary_split_pred"))
+		var last_frame_num := 0
+		var last_position := Vector3.ZERO
+		var last_rotation := Vector3.ZERO
+		var last_angle := 0.0
+		var last_distance := 0.1
+		var next_frame = out.get("first_true", null) as VMD.CameraKeyframe
+
+		if "last_false" in out:
+			var last_frame := out.last_false as VMD.CameraKeyframe
+			last_frame_num = last_frame.frame_number
+			last_position = last_frame.position
+			last_rotation = last_frame.rotation
+			last_angle = last_frame.angle
+			last_distance = last_frame.distance
+
+		if next_frame == null:
+			result.position = last_position
+			result.rotation = last_rotation
+			result.angle = last_angle
+			result.distance = last_distance
+		else:
+			pass
+			var x = next_frame.interp.X.inv_lerp(last_frame_num, next_frame.frame_number, frame_number)
+			var y = next_frame.interp.Y.inv_lerp(last_frame_num, next_frame.frame_number, frame_number)
+			var z = next_frame.interp.Z.inv_lerp(last_frame_num, next_frame.frame_number, frame_number)
+			var r = next_frame.interp.R.inv_lerp(last_frame_num, next_frame.frame_number, frame_number)
+			var a = next_frame.interp.angle.inv_lerp(last_frame_num, next_frame.frame_number, frame_number)
+			var d = next_frame.interp.dist.inv_lerp(last_frame_num, next_frame.frame_number, frame_number)
+			result.position.x = lerp(last_position.x, next_frame.position.x, x)
+			result.position.y = lerp(last_position.y, next_frame.position.y, y)
+			result.position.z = lerp(last_position.z, next_frame.position.z, z)
+			result.rotation = last_rotation.linear_interpolate(next_frame.rotation, r)
+			result.angle = lerp(last_angle, next_frame.angle, a)
+			result.distance = lerp(last_distance, next_frame.distance, d)
+		return result
+
 class IKCurve:
 	var keyframes := []
 	
-	var _bin_split_frame_number: float	
+	var _bin_split_frame_number: float 
 	
 	func binary_split_pred(f: VMD.IKKeyframe):
 		return f.frame_number-1 >= _bin_split_frame_number
@@ -109,10 +161,10 @@ class IKCurve:
 			var keyframe = out.last_false as VMD.IKKeyframe
 			return keyframe.ik_enable
 		return {}
-		
 var bones := {}
 var faces := {}
 var ik := IKCurve.new()
+var camera := CameraCurve.new()
 
 func _init(vmds: Array):
 	for i in range(vmds.size()):
@@ -134,6 +186,9 @@ func add_clip(vmd: VMD):
 	for i in range(vmd.ik_keyframes.size()):
 		var keyframe = vmd.ik_keyframes[i] as VMD.IKKeyframe
 		ik.keyframes.append(keyframe)
+	for i in range(vmd.camera_keyframes.size()):
+		var keyframe = vmd.camera_keyframes[i] as VMD.CameraKeyframe
+		camera.keyframes.append(keyframe)
 
 func sort_bones(a: VMD.BoneKeyframe, b: VMD.BoneKeyframe):
 	if a.frame_number < b.frame_number:
@@ -150,6 +205,9 @@ func sort_ik(a: VMD.IKKeyframe, b: VMD.IKKeyframe):
 		return true
 	return false
 
+func sort_camera(a: VMD.CameraKeyframe, b: VMD.camera_keyframes):
+	return a.frame_number < b.frame_number
+
 func process():
 	for i in range(bones.size()):
 		var curve = bones.values()[i] as BoneCurve
@@ -158,6 +216,7 @@ func process():
 		var curve = faces.values()[i] as FaceCurve
 		curve.keyframes.sort_custom(self, "sort_faces")
 	ik.keyframes.sort_custom(self, "sort_ik")
+	camera.keyframes.sort_custom(self, "sort_camera")
 
 func get_max_frame() -> int:
 	var max_frame = 0
