@@ -2,8 +2,20 @@ extends VMDAnimatorBase
 
 class_name VRMAnimator
 
+const MMD_TO_VRM_MORPH = {
+	"まばたき": "blink",
+	"ウィンク": "blink_l",
+	"ウィンク右": "blink_r",
+	"あ": "a",
+	"い": "i",
+	"う": "u",
+	"え": "e",
+	"お": "o"
+}
+
 var vrm: VRMTopLevel
 
+var mesh_idx_to_mesh = []
 
 func _ready():
 	assert(get_child_count() > 0, "Must have a VRMTopLevel as the only child")
@@ -13,6 +25,9 @@ func _ready():
 	var rest_bones : Dictionary
 	_fetch_reset_animation(skeleton, rest_bones)	
 	_fix_skeleton(skeleton, rest_bones)
+	for child in skeleton.get_children():
+		if child is MeshInstance:
+			mesh_idx_to_mesh.append(child)
 
 
 func find_humanoid_bone(bone_name: String):
@@ -80,3 +95,16 @@ func _fix_skeleton(p_skeleton : Skeleton, r_rest_bones : Dictionary) -> void:
 			continue
 		var rest_transform : Transform  = r_rest_bones[final_path]["rest_local"]
 		p_skeleton.set_bone_rest(i, rest_transform)
+
+func set_blend_shape_value(blend_shape_name: String, value: float):
+	var meta = vrm.vrm_meta
+	var new_bs_name = ""
+	if blend_shape_name in MMD_TO_VRM_MORPH:
+		blend_shape_name = MMD_TO_VRM_MORPH[blend_shape_name]
+		var group = meta.blend_shape_groups[blend_shape_name]
+		for bind in group.binds:
+			if bind.mesh < mesh_idx_to_mesh.size():
+				var weight = 0.99999 * float(bind.weight) / 100.0
+				var mesh := mesh_idx_to_mesh[bind.mesh] as MeshInstance
+				mesh.set("blend_shapes/morph_%d" % [bind.index], value * weight)
+		

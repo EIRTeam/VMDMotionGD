@@ -88,6 +88,8 @@ class FaceCurve:
 		
 		if next_frame == null:
 			return last_weight
+		var w = inverse_lerp(last_frame_num, next_frame.frame_number, frame_number)
+		return lerp(last_weight, next_frame.weight, w) 
 			
 		return inverse_lerp(last_frame_num, next_frame.frame_number, frame_number)
 		

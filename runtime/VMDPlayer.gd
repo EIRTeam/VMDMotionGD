@@ -13,6 +13,7 @@ export var locomotion_scale = Vector3.ONE
 export var manual_update_time = false
 export var enable_ik = true
 export var enable_ikq = false
+export var enable_shape = true
 
 var start_time: int
 var scale_overrides = PoolRealArray()
@@ -99,7 +100,7 @@ func load_motion(motion_path: String):
 		# TODO: this
 		#var source_overrides = {}
 		vmd_skeleton = VMDSkeleton.new(animator, self)
-		morph = Morph.new()
+		morph = Morph.new(animator, motion.faces.keys())
 	for bone_i in [StandardBones.get_bone_i("左足ＩＫ"), StandardBones.get_bone_i("左つま先ＩＫ"), 
 					StandardBones.get_bone_i("右足ＩＫ"), StandardBones.get_bone_i("右つま先ＩＫ")]:
 		vmd_skeleton.bones[bone_i].ik_enabled = bone_curves[bone_i].keyframes.size() > 1
@@ -132,10 +133,21 @@ func _process(delta):
 	var frame = time * FPS
 	update_frame(frame)
 func update_frame(frame: float):
+	if enable_shape:
+		apply_face_frame(frame)
 	apply_ik_frame(frame)
 	apply_bone_frame(frame)
 	vmd_skeleton.apply_constraints(enable_ik, enable_ik and enable_ikq)
 	vmd_skeleton.apply_targets()
+	morph.apply_targets()
+func apply_face_frame(frame: float):
+	frame = max(frame, 0.0)
+
+	for key in motion.faces:
+		var value = motion.faces[key] as Motion.FaceCurve
+		if key in morph.shapes:
+			var shape = morph.shapes[key]
+			shape.weight = value.sample(frame)
 
 func apply_bone_frame(frame: float):
 	frame = max(frame, 0.0)
