@@ -205,7 +205,7 @@ func sort_ik(a: VMD.IKKeyframe, b: VMD.IKKeyframe):
 		return true
 	return false
 
-func sort_camera(a: VMD.CameraKeyframe, b: VMD.camera_keyframes):
+func sort_camera(a: VMD.CameraKeyframe, b: VMD.CameraKeyframe):
 	return a.frame_number < b.frame_number
 
 func process():

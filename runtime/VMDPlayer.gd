@@ -150,7 +150,8 @@ func update_frame(frame: float):
 	vmd_skeleton.apply_constraints(enable_ik, enable_ik and enable_ikq)
 	vmd_skeleton.apply_targets()
 	morph.apply_targets()
-	apply_camera_frame(frame)
+	if camera:
+		apply_camera_frame(frame)
 
 func apply_face_frame(frame: float):
 	frame = max(frame, 0.0)
