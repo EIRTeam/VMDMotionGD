@@ -58,18 +58,18 @@ func load_motions(motion_paths: Array):
 	
 	max_frame = motion.get_max_frame()
 	print_debug("Duration: %.2f s (%d frames)" % [max_frame / FPS, max_frame])
-	var bone_frames_str = PoolStringArray()
-	bone_frames_str.resize(motion.bones.size())
-	for i in motion.bones.size():
-		var curve = motion.bones.values()[i] as Motion.BoneCurve
-		bone_frames_str.set(i, "%s (%d)" % [motion.bones.keys()[i], curve.keyframes.size()])
+#	var bone_frames_str = PoolStringArray()
+#	bone_frames_str.resize(motion.bones.size())
+#	for i in motion.bones.size():
+#		var curve = motion.bones.values()[i] as Motion.BoneCurve
+#		bone_frames_str.set(i, "%s (%d)" % [motion.bones.keys()[i], curve.keyframes.size()])
 #	print_debug("Bone frames: ", bone_frames_str.join(", "))
 	
-	var face_frames_str = PoolStringArray()
-	face_frames_str.resize(motion.faces.size())
-	for i in motion.faces.size():
-		var curve = motion.faces.values()[i] as Motion.FaceCurve
-		face_frames_str.set(i, "%s (%d)" % [motion.faces.keys()[i], curve.keyframes.size()])
+#	var face_frames_str = PoolStringArray()
+#	face_frames_str.resize(motion.faces.size())
+#	for i in motion.faces.size():
+#		var curve = motion.faces.values()[i] as Motion.FaceCurve
+#		face_frames_str.set(i, "%s (%d)" % [motion.faces.keys()[i], curve.keyframes.size()])
 #	print_debug("Face frames: ", face_frames_str.join(", "))
 	
 	first_frame_number = 0
@@ -165,14 +165,14 @@ func apply_face_frame(frame: float):
 func apply_camera_frame(frame: float):
 	frame = max(frame, 0.0)
 	var camera_sample = motion.camera.sample(frame) as Motion.CameraCurve.CameraSampleResult
-	var target_pos = camera_sample.position * 0.07
+	var target_pos = camera_sample.position
 	var quat = Quat.IDENTITY
 	var rot = camera_sample.rotation
 	quat.set_euler(rot)
 	var camera_pos = target_pos
 	target_pos.z *= -1
 	camera.global_transform.basis = Basis(quat)
-	camera.global_transform.origin = target_pos + (quat * Vector3.FORWARD) * camera_sample.distance * 0.08
+	camera.global_transform.origin = (target_pos + (quat * Vector3.FORWARD) * camera_sample.distance) * anim_scale
 
 	camera.fov = camera_sample.angle
 

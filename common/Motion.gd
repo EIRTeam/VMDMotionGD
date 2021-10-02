@@ -10,14 +10,14 @@ class BoneCurve:
 	
 	var _bin_split_frame_number: float
 	
-	func binary_split_pred(f: VMD.BoneKeyframe):
-		return f.frame_number >= _bin_split_frame_number
+	func binary_split_pred(a: VMD.BoneKeyframe, value: float):
+		return a.frame_number < value
 	
 	func sample(frame_number: float) -> BoneSampleResult:
 		var result := BoneSampleResult.new()
 		
 		_bin_split_frame_number = frame_number
-		var out := VMDUtils.binary_split(keyframes, funcref(self, "binary_split_pred"))
+		var out := VMDUtils.binary_split(keyframes, _bin_split_frame_number, self, "binary_split_pred")
 		var last_frame_num := 0
 		var last_position := Vector3.ZERO
 		var last_rotation := Quat.IDENTITY
@@ -68,12 +68,12 @@ class FaceCurve:
 	
 	var _bin_split_frame_number: float
 	
-	func binary_split_pred(f: VMD.FaceKeyframe):
-		return f.frame_number >= _bin_split_frame_number
+	func binary_split_pred(f: VMD.FaceKeyframe, value):
+		return f.frame_number < value
 	
 	func sample(frame_number: float) -> float:
 		_bin_split_frame_number = frame_number
-		var out := VMDUtils.binary_split(keyframes, funcref(self, "binary_split_pred"))
+		var out := VMDUtils.binary_split(keyframes, _bin_split_frame_number, self, "binary_split_pred")
 		var last_frame_num := 0
 		var last_weight := 0.0
 		
@@ -97,22 +97,22 @@ class CameraCurve:
 		var position: Vector3
 		var rotation: Vector3
 		var angle: float
-		var perspective: bool = true
+		var ortographic: bool = true
 	
 	var _bin_split_frame_number: float
 		
-	func binary_split_pred(f: VMD.CameraKeyframe):
-		return f.frame_number-1 >= _bin_split_frame_number
+	func binary_split_pred(f: VMD.CameraKeyframe, value):
+		return f.frame_number-1 < value
 		
 	func sample(frame_number: float):
 		_bin_split_frame_number = frame_number
 		var result := CameraSampleResult.new()
 
-		var out := VMDUtils.binary_split(keyframes, funcref(self, "binary_split_pred"))
+		var out := VMDUtils.binary_split(keyframes, _bin_split_frame_number, self, "binary_split_pred")
 		var last_frame_num := 0
 		var last_position := Vector3.ZERO
 		var last_rotation := Vector3.ZERO
-		var last_angle := 0.0
+		var last_angle := 45.0
 		var last_distance := 0.1
 		var next_frame = out.get("first_true", null) as VMD.CameraKeyframe
 
@@ -130,7 +130,6 @@ class CameraCurve:
 			result.angle = last_angle
 			result.distance = last_distance
 		else:
-			pass
 			var x = next_frame.interp.X.inv_lerp(last_frame_num, next_frame.frame_number, frame_number)
 			var y = next_frame.interp.Y.inv_lerp(last_frame_num, next_frame.frame_number, frame_number)
 			var z = next_frame.interp.Z.inv_lerp(last_frame_num, next_frame.frame_number, frame_number)
@@ -150,12 +149,12 @@ class IKCurve:
 	
 	var _bin_split_frame_number: float 
 	
-	func binary_split_pred(f: VMD.IKKeyframe):
-		return f.frame_number-1 >= _bin_split_frame_number
+	func binary_split_pred(f: VMD.IKKeyframe, value: float):
+		return f.frame_number-1 < value
 	
 	func sample(frame_number: float) -> Dictionary:
 		_bin_split_frame_number = frame_number
-		var out := VMDUtils.binary_split(keyframes, funcref(self, "binary_split_pred"))
+		var out := VMDUtils.binary_split(keyframes, _bin_split_frame_number, self, "binary_split_pred")
 		
 		if "last_false" in out:
 			var keyframe = out.last_false as VMD.IKKeyframe
