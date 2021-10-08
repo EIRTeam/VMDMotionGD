@@ -31,7 +31,7 @@ func _ready():
 
 
 func find_humanoid_bone(bone_name: String):
-	if bone_name in vrm.vrm_meta.humanoid_bone_mapping:
+	if vrm.vrm_meta.humanoid_bone_mapping and bone_name in vrm.vrm_meta.humanoid_bone_mapping and vrm.vrm_meta:
 		return skeleton.find_bone(vrm.vrm_meta.humanoid_bone_mapping[bone_name])
 	else:
 		return skeleton.find_bone(bone_name)
@@ -75,7 +75,6 @@ func _fix_skeleton(p_skeleton : Skeleton, r_rest_bones : Dictionary) -> void:
 	for i in bone_count:
 		var parent_bone : int = p_skeleton.get_bone_parent(i)
 		var path : NodePath = p_skeleton.get_owner().get_path_to(p_skeleton)
-		var final_path : String = str(path) + ":" + p_skeleton.get_bone_name(parent_bone)
 		if parent_bone >= 0 and r_rest_bones.has(path):
 			r_rest_bones[path]["children"].push_back(i)
 
