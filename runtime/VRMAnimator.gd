@@ -31,7 +31,7 @@ func _ready():
 
 
 func find_humanoid_bone(bone_name: String):
-	if vrm.vrm_meta.humanoid_bone_mapping and bone_name in vrm.vrm_meta.humanoid_bone_mapping and vrm.vrm_meta:
+	if vrm.vrm_meta and vrm.vrm_meta.humanoid_bone_mapping and bone_name in vrm.vrm_meta.humanoid_bone_mapping:
 		return skeleton.find_bone(vrm.vrm_meta.humanoid_bone_mapping[bone_name])
 	else:
 		return skeleton.find_bone(bone_name)
