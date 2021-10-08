@@ -182,7 +182,8 @@ func apply_bone_frame(frame: float):
 		var bone = vmd_skeleton.bones[i] as VMDSkeleton.VMDSkelBone
 		var curve = bone_curves[i] as Motion.BoneCurve
 		var sample_result := curve.sample(frame) as Motion.BoneCurve.BoneSampleResult
-		
+		if not sample_result:
+			continue
 		var pos := sample_result.position
 		var rot = sample_result.rotation
 		
