@@ -263,7 +263,7 @@ func optimize_bone_tracks(allowed_linear_err: float, allowed_angular_err: float,
 
 func extract_bone_tracks():
 	for i in range(bone_keyframes.size()):
-		var vk = bone_keyframes[i]
+		var bk = bone_keyframes[i]
 		if not bk.name in bone_tracks:
 			bone_tracks[bk.name] = []
 		bone_tracks[bk.name].append(bk)
