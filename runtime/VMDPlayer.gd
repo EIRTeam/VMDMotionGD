@@ -166,14 +166,14 @@ func apply_camera_frame(frame: float):
 	frame = max(frame, 0.0)
 	var camera_sample = motion.camera.sample(frame) as Motion.CameraCurve.CameraSampleResult
 	var target_pos = camera_sample.position
+	target_pos.z *= -1
 	var quat = Quat.IDENTITY
 	var rot = camera_sample.rotation
 	quat.set_euler(rot)
 	var camera_pos = target_pos
-	target_pos.z *= -1
 	camera.global_transform.basis = Basis(quat)
 	camera.global_transform.origin = (target_pos + (quat * Vector3.FORWARD) * camera_sample.distance) * anim_scale
-
+	camera.global_transform = camera.global_transform.rotated(Vector3(0.0, 1.0, 0.0), deg2rad(180))
 	camera.fov = camera_sample.angle
 
 func apply_bone_frame(frame: float):
