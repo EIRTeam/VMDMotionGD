@@ -97,7 +97,7 @@ class CameraCurve:
 		var position: Vector3
 		var rotation: Vector3
 		var angle: float
-		var ortographic: bool = true
+		var orthographic: bool = true
 	
 	var _bin_split_frame_number: float
 		
